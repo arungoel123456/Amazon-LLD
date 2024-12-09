@@ -8,6 +8,9 @@ import com.demo.interfaces.CartService;
 import com.demo.interfaces.OrderService;
 import com.demo.interfaces.PaymentService;
 import com.demo.interfaces.UserService;
+import com.demo.orderStatus.DeliveredOrderState;
+import com.demo.orderStatus.OutForDeliveryOrderState;
+import com.demo.orderStatus.State;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
                     userService.getUser(cart.getUserId()).getOrders().add(order);
                     cartService.removeFromCart(cartProduct.getId());
                 }
-                System.out.println("Order creation successful.");
+                System.out.println("Order creation successful");
             } else {
                 // Handle payment failure
                 System.err.println("Payment failed. Order creation aborted.");
@@ -58,5 +61,24 @@ public class OrderServiceImpl implements OrderService {
             System.err.println("An error occurred: ");
             return null;
         });
+    }
+
+    @Override
+    public void sendOrderForDelivery(String orderId) {
+        Order order = orders.get(orderId);
+        State outForDeliveryOrderState = new OutForDeliveryOrderState();
+        changeState(outForDeliveryOrderState, order);
+    }
+
+    @Override
+    public void delivered(String orderId) {
+        Order order = orders.get(orderId);
+        State deliveredOrderState = new DeliveredOrderState();
+        changeState(deliveredOrderState, order);
+    }
+
+    private void changeState(State state, Order order) {
+        order.setStatus(state);
+        state.sendNotification(order);
     }
 }

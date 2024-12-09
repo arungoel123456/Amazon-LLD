@@ -1,6 +1,5 @@
 package com.demo.dto;
 
-import com.demo.enums.OrderStatus;
 import com.demo.orderStatus.CreatedOrderState;
 import com.demo.orderStatus.State;
 
