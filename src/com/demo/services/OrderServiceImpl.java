@@ -4,10 +4,7 @@ import com.demo.dto.Cart;
 import com.demo.dto.CartProduct;
 import com.demo.dto.Order;
 import com.demo.dto.OrderProduct;
-import com.demo.interfaces.CartService;
-import com.demo.interfaces.OrderService;
-import com.demo.interfaces.PaymentService;
-import com.demo.interfaces.UserService;
+import com.demo.interfaces.*;
 import com.demo.orderStatus.DeliveredOrderState;
 import com.demo.orderStatus.OutForDeliveryOrderState;
 import com.demo.orderStatus.State;
@@ -16,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class OrderServiceImpl implements OrderService {
 
@@ -23,12 +21,16 @@ public class OrderServiceImpl implements OrderService {
     CartService cartService;
     UserService userService;
     PaymentService paymentService;
+    ProductService productService;
+    ReentrantLock lock;
 
-    public OrderServiceImpl(CartService cartService, UserService userService, PaymentService paymentService) {
+    public OrderServiceImpl(CartService cartService, UserService userService, PaymentService paymentService, ProductService productService) {
         this.cartService = cartService;
         orders= new HashMap<>();
         this.userService = userService;
         this.paymentService = paymentService;
+        this.productService = productService;
+        lock = new ReentrantLock();
     }
 
     @Override
@@ -46,10 +48,23 @@ public class OrderServiceImpl implements OrderService {
             if (paymentSuccess) {
                 // Proceed to create orders if payment was successful
                 for (CartProduct cartProduct : cartProducts) {
-                    Order order = new Order(cart.getUserId(), cartProduct.getProduct().getId(), cartProduct.getQuantity(), cartProduct.getProduct().getPrice());
-                    orders.put(order.getId(), order);
-                    userService.getUser(cart.getUserId()).getOrders().add(order);
-                    cartService.removeFromCart(cartProduct.getId());
+//                    if(lock.tryLock())
+//                    {
+//                        lock.lock();
+//                        productService.checkQuantity(cartProduct.getProduct().getId(), cartProduct.getQuantity());
+//                        Order order = new Order(cart.getUserId(), cartProduct.getProduct().getId(), cartProduct.getQuantity(), cartProduct.getProduct().getPrice());
+//                        orders.put(order.getId(), order);
+//                        userService.getUser(cart.getUserId()).getOrders().add(order);
+//                        cartService.removeFromCart(cartProduct.getId());
+//                        lock.unlock();
+//                    }
+                    synchronized (cartProduct.getProduct()){
+                        productService.checkQuantity(cartProduct.getProduct().getId(), cartProduct.getQuantity());
+                        Order order = new Order(cart.getUserId(), cartProduct.getProduct().getId(), cartProduct.getQuantity(), cartProduct.getProduct().getPrice());
+                        orders.put(order.getId(), order);
+                        userService.getUser(cart.getUserId()).getOrders().add(order);
+                        cartService.removeFromCart(cartProduct.getId());
+                    }
                 }
                 System.out.println("Order creation successful");
             } else {

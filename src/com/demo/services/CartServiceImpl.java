@@ -11,19 +11,19 @@ import java.util.List;
 import java.util.Map;
 
 public class CartServiceImpl implements CartService {
-    Map<Integer, Product> products;
     Map<Integer, CartProduct> cartProducts;
     Map<Integer, Cart> carts;
     ProductService productService;
 
-    public CartServiceImpl(Map<Integer, Product> products, ProductService productService) {
-        this.products = products;
+    public CartServiceImpl( ProductService productService) {
         cartProducts = new HashMap<>();
         this.productService= productService;
+
     }
 
     @Override
     public boolean addToCart(int cartId, int productId, int quantity) {
+        Map<Integer, Product> products = productService.getProducts();
         Product product = products.get(productId);
         if (product.getStock() <= 0) {
             return false;

@@ -29,4 +29,7 @@ public class ProductServiceImpl implements ProductService {
     public Map<Integer, Product> getProducts() {
         return products;
     }
+    public boolean checkQuantity(int productId, int quantity){
+        return products.get(productId).getStock() > quantity;
+    }
 }

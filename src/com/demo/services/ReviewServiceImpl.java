@@ -34,8 +34,6 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviews.get(id);
         reviews.remove(id);
         products.get(review.getProductId()).getReviews().remove(review);
-        review = null;
-        System.gc();
     }
 
 
